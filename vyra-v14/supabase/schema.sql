@@ -1,0 +1,11 @@
+create table if not exists profiles(id uuid primary key references auth.users(id) on delete cascade,email text,role text not null default 'user',plan text not null default 'free',unlimited_credits boolean not null default false,created_at timestamptz default now());
+create table if not exists projects(id uuid primary key default gen_random_uuid(),user_id uuid not null references profiles(id) on delete cascade,name text not null,created_at timestamptz default now());
+create table if not exists assets(id uuid primary key default gen_random_uuid(),user_id uuid not null references profiles(id) on delete cascade,project_id uuid references projects(id) on delete set null,path text not null,mime_type text,created_at timestamptz default now());
+create table if not exists jobs(id uuid primary key default gen_random_uuid(),user_id uuid not null references profiles(id) on delete cascade,project_id uuid references projects(id) on delete set null,type text not null,status text not null default 'queued',provider text,model text,cost integer default 0,output_asset_id uuid references assets(id) on delete set null,created_at timestamptz default now(),updated_at timestamptz default now());
+create table if not exists credit_ledger(id uuid primary key default gen_random_uuid(),user_id uuid not null references profiles(id) on delete cascade,amount integer not null,reason text not null,job_id uuid references jobs(id) on delete set null,created_at timestamptz default now());
+alter table profiles enable row level security; alter table projects enable row level security; alter table assets enable row level security; alter table jobs enable row level security; alter table credit_ledger enable row level security;
+create policy "own profile" on profiles for select using (auth.uid()=id);
+create policy "own projects" on projects for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+create policy "own assets" on assets for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+create policy "own jobs" on jobs for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+create policy "own ledger" on credit_ledger for select using (auth.uid()=user_id);

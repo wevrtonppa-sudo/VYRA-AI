@@ -1,0 +1,1 @@
+{"name":"vyra-ai-v14","private":true,"scripts":{"dev":"npm --prefix apps/api run dev","start":"npm --prefix apps/api start"},"workspaces":["apps/web","apps/api"]}
